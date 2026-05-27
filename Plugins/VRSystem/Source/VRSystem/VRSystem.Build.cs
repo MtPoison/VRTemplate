@@ -25,7 +25,7 @@ public class VRSystem : ModuleRules
 		PublicDependencyModuleNames.AddRange(
 			new string[]
 			{
-				"Core", "EnhancedInput","Niagara", "HeadMountedDisplay", "XRBase", "UMG", "EnhancedInput", "NavigationSystem"
+				"Core", "EnhancedInput","Niagara", "NiagaraCore", "HeadMountedDisplay", "XRBase", "UMG", "EnhancedInput", "NavigationSystem",  "InputCore",  
 				// ... add other public dependencies that you statically link with here ...
 			}
 			);

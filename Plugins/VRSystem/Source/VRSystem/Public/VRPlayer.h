@@ -7,9 +7,6 @@
 #include "GameFramework/Pawn.h"
 #include "HeadMountedDisplayTypes.h"
 #include "InputAction.h"
-#include "MannequinXR.h"
-#include "PawnAnimInterface.h"
-#include "TeleportVisualizer.h"
 #include "VRPlayer.generated.h"
 
 class USceneComponent;
@@ -23,7 +20,7 @@ class ATeleportVisualizer;
 class UVRNotificationsComponent;
 
 UCLASS()
-class VRSYSTEM_API AVRPlayer : public APawn, public IPawnAnimInterface
+class VRSYSTEM_API AVRPlayer : public APawn
 {
 	GENERATED_BODY()
 
@@ -48,11 +45,11 @@ private:
 
 	void TeleportTrace();
 
-	void StartTeleportTrace();
+	/*void StartTeleportTrace();
 	
 	void EndTeleportTrace();
 
-	void TryTeleport();
+	void TryTeleport();*/
 
 	UGrabComponent* GetGrabComponentNearMotionController(UMotionControllerComponent* MontionControllerValue);
 	
@@ -180,8 +177,6 @@ private:
     UPROPERTY(VisibleAnywhere, Category = "VR Left")
     TObjectPtr<UMotionControllerComponent> MotionControllerLeftGrip;
 
-    UPROPERTY(VisibleAnywhere, Category = "VR Left")
-    TObjectPtr<UMannequinXR> HandLeft;
 
     UPROPERTY(VisibleAnywhere, Category = "VR Left")
     TObjectPtr<UStaticMeshComponent> XRDeviceVisualizationLeft;
@@ -193,8 +188,6 @@ private:
     UPROPERTY(VisibleAnywhere, Category = "VR Right")
     TObjectPtr<UMotionControllerComponent> MotionControllerRightGrip;
 
-    UPROPERTY(VisibleAnywhere, Category = "VR Right")
-    TObjectPtr<UMannequinXR> HandRight;
 
     UPROPERTY(VisibleAnywhere, Category = "VR Right")
     TObjectPtr<UStaticMeshComponent> XRDeviceVisualizationRight;
@@ -228,16 +221,6 @@ private:
 
 	bool bTeleportTraceActive;
 
-	UPROPERTY()
-	ATeleportVisualizer* TeleportVisualizer;
-
-	float GrabRadiusFromGripPosition = 6.0f;
-
-	UPROPERTY()
-	TObjectPtr<UGrabComponent> HeldComponentLeft;
-
-	UPROPERTY()
-	TObjectPtr<UGrabComponent> HeldComponentRight;
 
 	UPROPERTY()
 	TObjectPtr<UMotionControllerComponent> HeldComponentTop;

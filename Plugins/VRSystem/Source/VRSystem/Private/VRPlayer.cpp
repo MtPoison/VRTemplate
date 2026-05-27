@@ -19,7 +19,6 @@
 #include "VRNotificationsComponent.h"
 #include "Kismet/GameplayStatics.h"
 #include "NiagaraDataInterfaceArrayFunctionLibrary.h"
-#include "MannequinsXR.h"
 #include "Kismet/GameplayStaticsTypes.h"
 
 // Sets default values
@@ -52,8 +51,7 @@ AVRPlayer::AVRPlayer()
     MotionControllerLeftGrip->SetupAttachment(MotionControllerRightAim);
     MotionControllerLeftGrip->MotionSource = FName("LeftGrip");
 
-    HandLeft = CreateDefaultSubobject<UMannequinXR>(TEXT("HandLeft"));
-    HandLeft->SetupAttachment(MotionControllerLeftGrip);
+  
 
     XRDeviceVisualizationLeft = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("XRDeviceVisualizationLeft"));
     XRDeviceVisualizationLeft->SetupAttachment(MotionControllerLeftGrip);
@@ -65,8 +63,6 @@ AVRPlayer::AVRPlayer()
     MotionControllerRightGrip->SetupAttachment(VROrigin);
     MotionControllerRightGrip->MotionSource = FName("RightGrip");
 
-    HandRight = CreateDefaultSubobject<UMannequinXR>(TEXT("HandRight"));
-    HandRight->SetupAttachment(MotionControllerRightGrip);
 
     XRDeviceVisualizationRight = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("XRDeviceVisualizationRight"));
     XRDeviceVisualizationRight->SetupAttachment(MotionControllerRightGrip);
@@ -181,13 +177,6 @@ void AVRPlayer::TeleportTrace()
 		FVector(0, 0, 100)
 	);
 	
-	if (ValidTeleportLocation)
-	{
-		ValidTeleportLocation = true;
-		TeleportVisualizer->GetRootComponent()->SetVisibility(ValidTeleportLocation);
-	}
-
-	TeleportVisualizer->SetActorLocation(ProjectedTeleportLocation);
 	
 	UNiagaraDataInterfaceArrayFunctionLibrary::SetNiagaraArrayVector(
 		TeleportTraceNiagaraSystem,
@@ -196,19 +185,16 @@ void AVRPlayer::TeleportTrace()
 	);
 }
 
-void AVRPlayer::StartTeleportTrace()
+/*void AVRPlayer::StartTeleportTrace()
 {
 	bTeleportTraceActive = true;
 	TeleportTraceNiagaraSystem->SetVisibility(true);
-	TeleportVisualizer = GetWorld()->SpawnActor<ATeleportVisualizer>();
-}
 
 void AVRPlayer::EndTeleportTrace()
 {
 	bTeleportTraceActive = false;
 	if (TeleportVisualizer)
 	{
-		TeleportVisualizer->Destroy();
 	}
 	TeleportTraceNiagaraSystem->SetVisibility(false);
 }
@@ -225,7 +211,7 @@ void AVRPlayer::TryTeleport()
 		
 		TeleportTo((ProjectedTeleportLocation - FlatLocation), FRotator(0,0,ActorRotation.Roll));
 	}
-}
+}*/
 
 UGrabComponent* AVRPlayer::GetGrabComponentNearMotionController(UMotionControllerComponent* MontionControllerValue)
 {
@@ -238,39 +224,8 @@ UGrabComponent* AVRPlayer::GetGrabComponentNearMotionController(UMotionControlle
 	ObjectTypes.Add(UEngineTypes::ConvertToObjectType(ECollisionChannel::ECC_PhysicsBody));
 
 	FHitResult OutHit;
-	bool bHit = UKismetSystemLibrary::SphereTraceSingleForObjects(
-		GetWorld(),
-		LocalGripPosition,
-		LocalGripPosition,
-		GrabRadiusFromGripPosition,
-		ObjectTypes,
-		false,
-		TArray<AActor*>{GetOwner()},
-		EDrawDebugTrace::None,
-		OutHit,
-		true
-	);
-	if (bHit)
-	{
-		TArray<UGrabComponent*> LocalGrabComponents;
-		OutHit.GetActor()->GetComponents<UGrabComponent>(LocalGrabComponents);
-
-		if (LocalGrabComponents.Num() > 0)
-		{
-			
-
-			for (UGrabComponent* GrabComp : LocalGrabComponents)
-			{
-				float Distance = FVector::DistSquared(GrabComp->GetOwner()->GetActorLocation(), LocalGripPosition);
-
-				if (Distance <= LocalNearestComponentDistance)
-				{
-					LocalNearestComponentDistance = Distance;
-					LocalNearestComponent = GrabComp;
-				}
-			}
-		}
-	}
+	
+	
 	return LocalNearestComponent;
 }
 
@@ -281,28 +236,13 @@ void AVRPlayer::GrabLeftPressed()
 	if (TmpHeldComponentLeft)
 	{
 		
-		if (TmpHeldComponentLeft->TryGrab(MotionControllerLeftGrip))
-		{
-			
-			HeldComponentLeft = TmpHeldComponentLeft;
-			
-			if (HeldComponentLeft == HeldComponentRight)
-			{
-				HeldComponentRight = nullptr;
-			}
-		}
+		
 	}
 }
 
 void AVRPlayer::GrabLeftReleassed()
 {
-	if (HeldComponentLeft)
-	{
-		if (HeldComponentLeft->TryRelease())
-		{
-			HeldComponentLeft = nullptr;
-		}
-	}
+
 }
 
 void AVRPlayer::GrabRightPressed()
@@ -312,222 +252,97 @@ void AVRPlayer::GrabRightPressed()
 	if (TmpHeldComponentRight)
 	{
 		
-		if (TmpHeldComponentRight->TryGrab(MotionControllerLeftGrip))
-		{
-			
-			HeldComponentRight = TmpHeldComponentRight;
-			
-			if (HeldComponentRight == HeldComponentLeft)
-			{
-				HeldComponentLeft = nullptr;
-			}
-		}
+		
 	}
 }
 
 void AVRPlayer::GrabRightReleassed()
 {
-	if (HeldComponentRight)
-	{
-		if (HeldComponentRight->TryRelease())
-		{
-			HeldComponentRight = nullptr;
-		}
-	}
+	
 }
 
 void AVRPlayer::OnHandGraspLeft_Trigger(const FInputActionValue& Value)
 {
-	UAnimInstance* AnimInstance = HandLeft->GetAnimInstance();
-
-	UMannequinsXR* ABP = Cast<UMannequinsXR>(AnimInstance);
-	if (ABP)
-	{
-		ABP->PoseAlphaGrasp = Value.Get<float>();
-	}
 }
 
 void AVRPlayer::OnHandGraspLeft()
 {
-	UAnimInstance* AnimInstance = HandLeft->GetAnimInstance();
-
-	UMannequinsXR* ABP = Cast<UMannequinsXR>(AnimInstance);
-	if (ABP)
-	{
-		ABP->PoseAlphaGrasp = 0.f;
-	}
+	
 }
 
 void AVRPlayer::OnHandIndexCurlLeft_Trigger(const FInputActionValue& Value)
 {
-	UAnimInstance* AnimInstance = HandLeft->GetAnimInstance();
-
-	UMannequinsXR* ABP = Cast<UMannequinsXR>(AnimInstance);
-	if (ABP)
-	{
-		ABP->PoseAlphaIndexCurl = Value.Get<float>();
-	}
+	
 }
 
 void AVRPlayer::OnHandIndexCurlLeft()
 {
-	UAnimInstance* AnimInstance = HandLeft->GetAnimInstance();
-
-	UMannequinsXR* ABP = Cast<UMannequinsXR>(AnimInstance);
-	if (ABP)
-	{
-		ABP->PoseAlphaIndexCurl = 0;
-	}
+	
 }
 
 void AVRPlayer::OnHandPointLeft(const FInputActionValue& Value)
 {
-	UAnimInstance* AnimInstance = HandLeft->GetAnimInstance();
-
-	UMannequinsXR* ABP = Cast<UMannequinsXR>(AnimInstance);
-	if (ABP)
-	{
-		ABP->PoseAlphaIndexCurl = Value.Get<float>();
-	}
+	
 }
 
 void AVRPlayer::OnHandPointLeft_Completed()
 {
-	UAnimInstance* AnimInstance = HandLeft->GetAnimInstance();
-
-	UMannequinsXR* ABP = Cast<UMannequinsXR>(AnimInstance);
-	if (ABP)
-	{
-		ABP->PoseAlphaIndexCurl = 0;
-	}
+	
 }
 
 void AVRPlayer::HandThumbUpLeft(const FInputActionValue& Value)
 {
-	UAnimInstance* AnimInstance = HandLeft->GetAnimInstance();
-
-	UMannequinsXR* ABP = Cast<UMannequinsXR>(AnimInstance);
-	if (ABP)
-	{
-		ABP->PoseAlphaThumbUp = Value.Get<float>();
-	}
+	
 }
 
 void AVRPlayer::HandThumbUpLeft_Completed()
 {
-	UAnimInstance* AnimInstance = HandLeft->GetAnimInstance();
-
-	UMannequinsXR* ABP = Cast<UMannequinsXR>(AnimInstance);
-	if (ABP)
-	{
-		ABP->PoseAlphaThumbUp = 0;
-	}
+	
 }
 
 void AVRPlayer::OnHandGraspRight_Trigger(const FInputActionValue& Value)
 {
-	UAnimInstance* AnimInstance = HandLeft->GetAnimInstance();
-
-	UMannequinsXR* ABP = Cast<UMannequinsXR>(AnimInstance);
-	if (ABP)
-	{
-		ABP->PoseAlphaGrasp = Value.Get<float>();
-	}
+	
 }
 
 void AVRPlayer::OnHandGraspRight()
 {
-	UAnimInstance* AnimInstance = HandLeft->GetAnimInstance();
-
-	UMannequinsXR* ABP = Cast<UMannequinsXR>(AnimInstance);
-	if (ABP)
-	{
-		ABP->PoseAlphaGrasp = 0.f;
-	}
+	
 }
 
 void AVRPlayer::OnHandIndexCurlRight_Trigger(const FInputActionValue& Value)
 {
-	UAnimInstance* AnimInstance = HandLeft->GetAnimInstance();
-
-	UMannequinsXR* ABP = Cast<UMannequinsXR>(AnimInstance);
-	if (ABP)
-	{
-		ABP->PoseAlphaIndexCurl = Value.Get<float>();
-	}
+	
 }
 
 void AVRPlayer::OnHandIndexCurlRight()
 {
-	UAnimInstance* AnimInstance = HandLeft->GetAnimInstance();
-
-	UMannequinsXR* ABP = Cast<UMannequinsXR>(AnimInstance);
-	if (ABP)
-	{
-		ABP->PoseAlphaIndexCurl = 0;
-	}
+	
 }
 
 void AVRPlayer::OnHandPointRight(const FInputActionValue& Value)
 {
-	UAnimInstance* AnimInstance = HandLeft->GetAnimInstance();
-
-	UMannequinsXR* ABP = Cast<UMannequinsXR>(AnimInstance);
-	if (ABP)
-	{
-		ABP->PoseAlphaIndexCurl = Value.Get<float>();
-	}
+	
 }
 
 void AVRPlayer::OnHandPointRight_Completed()
 {
-	UAnimInstance* AnimInstance = HandLeft->GetAnimInstance();
-
-	UMannequinsXR* ABP = Cast<UMannequinsXR>(AnimInstance);
-	if (ABP)
-	{
-		ABP->PoseAlphaIndexCurl = 0;
-	}
+	
 }
 
 void AVRPlayer::HandThumbUpRight(const FInputActionValue& Value)
 {
-	UAnimInstance* AnimInstance = HandLeft->GetAnimInstance();
-
-	UMannequinsXR* ABP = Cast<UMannequinsXR>(AnimInstance);
-	if (ABP)
-	{
-		ABP->PoseAlphaThumbUp = Value.Get<float>();
-	}
+	
 }
 
 void AVRPlayer::HandThumbUpRight_Completed()
 {
-	UAnimInstance* AnimInstance = HandLeft->GetAnimInstance();
-
-	UMannequinsXR* ABP = Cast<UMannequinsXR>(AnimInstance);
-	if (ABP)
-	{
-		ABP->PoseAlphaThumbUp = 0;
-	}
+	
 }
 
 void AVRPlayer::HideUnhideHand_Implementation(bool bHide, bool bRightHand)
 {
-	UMannequinXR* TmpHand = nullptr;
-	if (bRightHand)
-	{
-		TmpHand = HandRight;
-	}
-	TmpHand = HandLeft;
-	TmpHand->SetVisibility(!bHide);
 	
-	if (!bRightHand)
-	{
-		TmpHand = HandRight;
-	}
-	TmpHand = HandLeft;
-	TmpHand->SetVisibility(true);
 }
 
 // Called every frame
@@ -555,9 +370,6 @@ void AVRPlayer::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 	if (IA_Move)
 	{
 		EIC->BindAction(IA_Move, ETriggerEvent::Triggered, this, &AVRPlayer::TeleportTrace);
-		EIC->BindAction(IA_Move, ETriggerEvent::Triggered, this, &AVRPlayer::StartTeleportTrace);
-		EIC->BindAction(IA_Move, ETriggerEvent::Triggered, this, &AVRPlayer::EndTeleportTrace);
-		EIC->BindAction(IA_Move, ETriggerEvent::Triggered, this, &AVRPlayer::TryTeleport);
 	}
 	
 	if (IA_Grab_Left_Pressed)
