@@ -34,7 +34,6 @@ void AVRChracter::BeginPlay()
 	if (UHeadMountedDisplayFunctionLibrary::IsHeadMountedDisplayEnabled())
 	{
 		UHeadMountedDisplayFunctionLibrary::SetTrackingOrigin(TrackingOrigin);
-		//UHeadMountedDisplayFunctionLibrary::SetSpectatorScreenMode(ESpectatorScreenMode::Disabled);
 		UHeadMountedDisplayFunctionLibrary::EnableHMD(true);
 		UKismetSystemLibrary::ExecuteConsoleCommand(GetWorld(),TEXT("xr.SecondaryScreenPercentage.HMDRenderTarget 100"),nullptr);
 		bSnapTurnTriggered = false;
